@@ -131,12 +131,180 @@ if (!exists('pmlTraining')) {
 ## Call:
 ## preProcess.default(x = pmlTraining[, -which(names(pmlTraining)
 ##  %in% c(&quot;classe&quot;, &quot;user_name&quot;, &quot;cvtd_timestamp&quot;, &quot;new_window&quot;))], method
-##  = &quot;pca&quot;, thresh = 0.9)
+##  = &quot;pca&quot;, thresh = 0.95)
 ## 
 ## Created from 14718 samples and 55 variables
 ## Pre-processing: principal component signal extraction, scaled, centered 
 ## 
-## PCA needed 20 components to capture 90 percent of the variance</code></pre>
+## PCA needed 26 components to capture 95 percent of the variance</code></pre>
+<p>In order to compare accuracy from different models, below are three models for classifying the data and providing the output.</p>
+<pre class="r"><code># Building tree model
+if (!exists('treeModel')) {
+  treeModel &lt;- train( classe ~ ., method='rpart', preProcess='pca', data=pmlTraining)
+  treeModel
+}</code></pre>
+<pre><code>## CART 
+## 
+## 14718 samples
+##    55 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## Pre-processing: principal component signal extraction, scaled, centered 
+## Resampling: Bootstrapped (25 reps) 
+## Summary of sample sizes: 14718, 14718, 14718, 14718, 14718, 14718, ... 
+## Resampling results across tuning parameters:
+## 
+##   cp          Accuracy   Kappa      Accuracy SD  Kappa SD  
+##   0.03830817  0.3593762  0.1445141  0.027044921  0.05453507
+##   0.05959049  0.3380040  0.1021092  0.026020161  0.04502840
+##   0.11544669  0.2840322  0.0000000  0.004796323  0.00000000
+## 
+## Accuracy was used to select the optimal model using  the largest value.
+## The final value used for the model was cp = 0.03830817.</code></pre>
+<pre class="r"><code>if (!exists('rfModel')) {
+  # Since the data is large enough to train well our model, the number of folds can be reduced to a
+  # small number, for instance, 5 (actually, I've tried with no folds and works very good as well)
+  # The number of trees can also be lowered to 50 due to the amount of variables predicting
+  rfModel &lt;- train( classe ~ ., method='rf', preProcess='pca', data=pmlTraining, prox=TRUE, ntree=50,
+                    trControl = trainControl(number=5, repeats=1))
+  rfModel
+}</code></pre>
+<pre><code>## Random Forest 
+## 
+## 14718 samples
+##    55 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## Pre-processing: principal component signal extraction, scaled, centered 
+## Resampling: Bootstrapped (5 reps) 
+## Summary of sample sizes: 14718, 14718, 14718, 14718, 14718 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy   Kappa      Accuracy SD  Kappa SD   
+##    2    0.9617305  0.9515758  0.002983545  0.003742772
+##   28    0.9409030  0.9252300  0.004556256  0.005754773
+##   55    0.9399454  0.9240203  0.005424458  0.006873331
+## 
+## Accuracy was used to select the optimal model using  the largest value.
+## The final value used for the model was mtry = 2.</code></pre>
+<pre class="r"><code>if (!exists('nbModel')) {
+  nbModel &lt;- train( classe ~ ., method='nb', preProcess='pca', data=pmlTraining,
+                    trControl = trainControl(number=5, repeats=1))
+  nbModel
+}</code></pre>
+<pre><code>## Naive Bayes 
+## 
+## 14718 samples
+##    55 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## Pre-processing: principal component signal extraction, scaled, centered 
+## Resampling: Bootstrapped (5 reps) 
+## Summary of sample sizes: 14718, 14718, 14718, 14718, 14718 
+## Resampling results across tuning parameters:
+## 
+##   usekernel  Accuracy   Kappa      Accuracy SD  Kappa SD   
+##   FALSE      0.5435355  0.4272484  0.011434890  0.009858645
+##    TRUE      0.6474388  0.5556150  0.006581835  0.009737015
+## 
+## Tuning parameter 'fL' was held constant at a value of 0
+## Accuracy was used to select the optimal model using  the largest value.
+## The final values used for the model were fL = 0 and usekernel = TRUE.</code></pre>
+<p>Once models were built, let’s see which is the accuracy for each one</p>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction   A   B   C   D   E
+##          A 902 268 250 159 255
+##          B   0   0   0   0   0
+##          C 345 403 541 260 245
+##          D 110 265  54 322 177
+##          E  38  13  10  63 224
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.4056          
+##                  95% CI : (0.3918, 0.4195)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.2435          
+##  Mcnemar's Test P-Value : &lt; 2.2e-16       
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.6466   0.0000   0.6327  0.40050  0.24861
+## Specificity            0.7344   1.0000   0.6905  0.85220  0.96902
+## Pos Pred Value         0.4918      NaN   0.3016  0.34698  0.64368
+## Neg Pred Value         0.8394   0.8065   0.8990  0.87877  0.85140
+## Prevalence             0.2845   0.1935   0.1743  0.16395  0.18373
+## Detection Rate         0.1839   0.0000   0.1103  0.06566  0.04568
+## Detection Prevalence   0.3740   0.0000   0.3658  0.18923  0.07096
+## Balanced Accuracy      0.6905   0.5000   0.6616  0.62635  0.60882</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1373   15    4    1    0
+##          B   10  915   15    1    1
+##          C    2   17  829   31    2
+##          D    7    2    6  770    8
+##          E    3    0    1    1  890
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.9741          
+##                  95% CI : (0.9693, 0.9784)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9672          
+##  Mcnemar's Test P-Value : 0.000243        
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9842   0.9642   0.9696   0.9577   0.9878
+## Specificity            0.9943   0.9932   0.9872   0.9944   0.9988
+## Pos Pred Value         0.9856   0.9713   0.9410   0.9710   0.9944
+## Neg Pred Value         0.9937   0.9914   0.9935   0.9917   0.9973
+## Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
+## Detection Rate         0.2800   0.1866   0.1690   0.1570   0.1815
+## Detection Prevalence   0.2841   0.1921   0.1796   0.1617   0.1825
+## Balanced Accuracy      0.9893   0.9787   0.9784   0.9761   0.9933</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1055  144  173   66   57
+##          B   73  576   89   51  115
+##          C  148  121  505  142   66
+##          D   94   52   33  489   69
+##          E   25   56   55   56  594
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.6564          
+##                  95% CI : (0.6429, 0.6697)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.5643          
+##  Mcnemar's Test P-Value : &lt; 2.2e-16       
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.7563   0.6070   0.5906  0.60821   0.6593
+## Specificity            0.8746   0.9171   0.8822  0.93951   0.9520
+## Pos Pred Value         0.7057   0.6372   0.5143  0.66350   0.7557
+## Neg Pred Value         0.9003   0.9067   0.9108  0.92441   0.9254
+## Prevalence             0.2845   0.1935   0.1743  0.16395   0.1837
+## Detection Rate         0.2151   0.1175   0.1030  0.09971   0.1211
+## Detection Prevalence   0.3049   0.1843   0.2002  0.15029   0.1603
+## Balanced Accuracy      0.8154   0.7620   0.7364  0.77386   0.8057</code></pre>
+<p>From the above results, the select model is the random forest. There is no need to test the 406 observations without NA though it could have been a good exercise.</p>
 </div>
 
 
