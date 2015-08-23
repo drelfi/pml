@@ -141,75 +141,20 @@ if (!exists('pmlTraining')) {
 <pre class="r"><code># Building tree model
 if (!exists('treeModel')) {
   treeModel &lt;- train( classe ~ ., method='rpart', preProcess='pca', data=pmlTraining)
-  treeModel
-}</code></pre>
-<pre><code>## CART 
-## 
-## 14718 samples
-##    55 predictor
-##     5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## Pre-processing: principal component signal extraction, scaled, centered 
-## Resampling: Bootstrapped (25 reps) 
-## Summary of sample sizes: 14718, 14718, 14718, 14718, 14718, 14718, ... 
-## Resampling results across tuning parameters:
-## 
-##   cp          Accuracy   Kappa      Accuracy SD  Kappa SD  
-##   0.03830817  0.3593762  0.1445141  0.027044921  0.05453507
-##   0.05959049  0.3380040  0.1021092  0.026020161  0.04502840
-##   0.11544669  0.2840322  0.0000000  0.004796323  0.00000000
-## 
-## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was cp = 0.03830817.</code></pre>
-<pre class="r"><code>if (!exists('rfModel')) {
+}
+
+if (!exists('rfModel')) {
   # Since the data is large enough to train well our model, the number of folds can be reduced to a
   # small number, for instance, 5 (actually, I've tried with no folds and works very good as well)
   # The number of trees can also be lowered to 50 due to the amount of variables predicting
   rfModel &lt;- train( classe ~ ., method='rf', preProcess='pca', data=pmlTraining, prox=TRUE, ntree=50,
                     trControl = trainControl(number=5, repeats=1))
-  rfModel
-}</code></pre>
-<pre><code>## Random Forest 
-## 
-## 14718 samples
-##    55 predictor
-##     5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## Pre-processing: principal component signal extraction, scaled, centered 
-## Resampling: Bootstrapped (5 reps) 
-## Summary of sample sizes: 14718, 14718, 14718, 14718, 14718 
-## Resampling results across tuning parameters:
-## 
-##   mtry  Accuracy   Kappa      Accuracy SD  Kappa SD   
-##    2    0.9617305  0.9515758  0.002983545  0.003742772
-##   28    0.9409030  0.9252300  0.004556256  0.005754773
-##   55    0.9399454  0.9240203  0.005424458  0.006873331
-## 
-## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 2.</code></pre>
-<pre class="r"><code>if (!exists('nbModel')) {
+}
+
+if (!exists('nbModel')) {
   nbModel &lt;- train( classe ~ ., method='nb', preProcess='pca', data=pmlTraining,
                     trControl = trainControl(number=5, repeats=1))
-  nbModel
 }</code></pre>
-<pre><code>## Naive Bayes 
-## 
-## 14718 samples
-##    55 predictor
-##     5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## Pre-processing: principal component signal extraction, scaled, centered 
-## Resampling: Bootstrapped (5 reps) 
-## Summary of sample sizes: 14718, 14718, 14718, 14718, 14718 
-## Resampling results across tuning parameters:
-## 
-##   usekernel  Accuracy   Kappa      Accuracy SD  Kappa SD   
-##   FALSE      0.5435355  0.4272484  0.011434890  0.009858645
-##    TRUE      0.6474388  0.5556150  0.006581835  0.009737015
-## 
-## Tuning parameter 'fL' was held constant at a value of 0
-## Accuracy was used to select the optimal model using  the largest value.
-## The final values used for the model were fL = 0 and usekernel = TRUE.</code></pre>
 <p>Once models were built, let’s see which is the accuracy for each one</p>
 <pre><code>## Confusion Matrix and Statistics
 ## 
@@ -304,7 +249,7 @@ if (!exists('treeModel')) {
 ## Detection Rate         0.2151   0.1175   0.1030  0.09971   0.1211
 ## Detection Prevalence   0.3049   0.1843   0.2002  0.15029   0.1603
 ## Balanced Accuracy      0.8154   0.7620   0.7364  0.77386   0.8057</code></pre>
-<p>From the above results, the select model is the random forest. There is no need to test the 406 observations without NA though it could have been a good exercise.</p>
+<p>From the above results, the selected model is the random forest. There is no need to test the 406 observations without NA though it could have been a good exercise.</p>
 </div>
 
 
