@@ -1,0 +1,60 @@
+---
+title: "Practical Machine Learning"
+date: "August 23, 2015"
+output: html_document
+---
+
+This document describes the study done based on the rules imposed by the Practical Machine Learning course provided by Coursera (predmachlearn-031).
+The full objective is to identify a predictive machine learning algorithm to classify measurements gotten from movements done with wearables. Full description from the project goals:
+
+> Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+# Data preparation
+
+The first step is to get the data and prepare it for the analysis understading and cleaning it.
+
+```{r, warning=FALSE}
+get.pml.files <- function() {
+  
+  if (! file.exists("pml-training.csv")) {
+    download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", "pml-training.csv", method="curl")
+  }
+  if (!file.exists("pml-testing.csv")) {
+    download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", "pml-testing.csv", method="curl")
+  }
+  
+  if (! exists('training')) {
+    training <- read.csv('pml-training.csv', 
+                         header=TRUE, 
+                         na.strings=c("","#DIV/0!","NA")
+                         #stringsAsFactors=FALSE
+                         )
+  }    
+  training
+}
+
+remove_na_columns <- function(training) {
+  require('dplyr')
+  
+  # Called my attention that many (67) columns has exactly 19216 NAs
+  nas <- apply(training, 2, function(x) {sum(is.na(x))})
+  colnas <- data.frame(nas)
+  colnas['colname'] <- row.names(colnas)
+  colnames_nas <- colnas %>% filter(nas > 0) %>% select(colname)
+  
+  # Get the training without NAs cols
+  if (dim(colnames_nas)[1] == 0) {
+    training
+  }
+  else {
+    training[, -which(names(training) %in% colnames_nas[['colname']])]
+  }
+  
+  # There are 406 observations with no NAs. 
+  # We should research if the obs without NAs can create
+  # a better model than doing it with all obs
+}
+```
+
+406 observations have been identified as complete measurements without NAs in most of the columns. Since the number observations is really high (19622 removing the columns with most of NAs), it could be a good start to train the model. In case that the model accuracy is not good, we can step back and try the 406 observations where almost all columns contain data.
+
