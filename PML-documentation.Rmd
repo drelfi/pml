@@ -58,3 +58,93 @@ remove_na_columns <- function(training) {
 
 406 observations have been identified as complete measurements without NAs in most of the columns. Since the number observations is really high (19622 removing the columns with most of NAs), it could be a good start to train the model. In case that the model accuracy is not good, we can step back and try the 406 observations where almost all columns contain data.
 
+Once the data has been clean, the next is to split it into training and testing to test accuracy later.
+```{r, warning=FALSE, error=FALSE, message=FALSE}
+set.seed(48293)
+training <- remove_na_columns(get.pml.files())
+
+require('caret')
+
+# Create a set of training and testing set to measure error
+if (!exists('pmlTraining')) {
+  inTrain <- createDataPartition(y=training$classe,p=0.75,list=FALSE)
+
+  pmlTest <- training[-inTrain,]    
+  pmlTraining <- training[inTrain,]
+  
+  # Also identified that there are columns which won't help 
+    pmlTraining <- pmlTraining[,-which( names(pmlTraining) %in% 
+                                        c('user_name', 'cvtd_timestamp', 'new_window', 'X'))]
+}
+```
+
+I struggled for a long time in the model accuracy using the training because of include the row number as part of the training
+It was key to remove that column (named X).
+
+# Training the models
+
+The first step in training is to identify how many variables (columns) can cover the 95% of the variance in the data. Using PCA we get:
+```{r, warning=FALSE, echo=FALSE, message=FALSE}
+# Since I wanted to try the caret train function with boosting, I decided to do it in parallel
+library(doMC)
+registerDoMC(cores = 3)
+
+# although the train method does it for you, let's see how many variables could cover the 90% of variance in the data
+preProc <- preProcess(
+  pmlTraining[,-which( names(pmlTraining) %in% 
+                         c('classe','user_name', 'cvtd_timestamp', 'new_window'))], 
+                       method='pca', thresh=0.95)
+
+preProc
+```
+
+In order to compare accuracy from different models, below are three models for classifying the data and providing the output.
+
+```{r, warning=FALSE, message=FALSE}
+# Building tree model
+if (!exists('treeModel')) {
+  treeModel <- train( classe ~ ., method='rpart', preProcess='pca', data=pmlTraining)
+  treeModel
+}
+
+if (!exists('rfModel')) {
+  # Since the data is large enough to train well our model, the number of folds can be reduced to a
+  # small number, for instance, 5 (actually, I've tried with no folds and works very good as well)
+  # The number of trees can also be lowered to 50 due to the amount of variables predicting
+  rfModel <- train( classe ~ ., method='rf', preProcess='pca', data=pmlTraining, prox=TRUE, ntree=50,
+                    trControl = trainControl(number=5, repeats=1))
+  rfModel
+}
+
+if (!exists('nbModel')) {
+  nbModel <- train( classe ~ ., method='nb', preProcess='pca', data=pmlTraining,
+                    trControl = trainControl(number=5, repeats=1))
+  nbModel
+}
+```
+
+Once models were built, let's see which is the accuracy for each one
+
+```{r,warning=FALSE, message=FALSE, echo=FALSE}
+# Confusion matrix
+if (exists('treeModel')) {
+  resTree <- predict(treeModel, pmlTest)
+  confusionMatrix(resTree, pmlTest$classe)
+}
+
+# Confusion matrix
+if (exists('rfModel')) {
+  resRF <- predict(rfModel, pmlTest)
+  confusionMatrix(resRF, pmlTest$classe)
+}
+
+# Confusion matrix against NB
+if (exists('nbModel')) {
+  resNB <- predict(nbModel, pmlTest)
+  confusionMatrix(resNB, pmlTest$classe)
+}
+
+```
+
+From the above results, the select model is the random forest.
+There is no need to test the 406 observations without NA though it could have been a good exercise.

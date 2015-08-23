@@ -121,15 +121,21 @@ if (!exists('nbModel')) {
 }
 
 # Confusion matrix
+if (exists('treeModel')) {
+  resTree <- predict(treeModel, pmlTest)
+  confusionMatrix(resTree, pmlTest$classe)
+}
+
+# Confusion matrix
 if (exists('rfModel')) {
   resRF <- predict(rfModel, pmlTest)
-  table(resRF, pmlTest$classe)
+  confusionMatrix(resRF, pmlTest$classe)
 }
 
 # Confusion matrix against NB
-if (exists('nbModel') & exists('resRF') ) {
+if (exists('nbModel')) {
   resNB <- predict(nbModel, pmlTest)
-  table(resRF, resNB)
+  confusionMatrix(resNB, pmlTest$classe)
 }
 
 submitTest <- read.csv('pml-testing.csv', 

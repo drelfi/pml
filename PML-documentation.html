@@ -79,8 +79,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
                          na.strings=c(&quot;&quot;,&quot;#DIV/0!&quot;,&quot;NA&quot;)
                          #stringsAsFactors=FALSE
                          )
-  }
-    
+  }    
   training
 }
 
@@ -106,6 +105,38 @@ remove_na_columns &lt;- function(training) {
   # a better model than doing it with all obs
 }</code></pre>
 <p>406 observations have been identified as complete measurements without NAs in most of the columns. Since the number observations is really high (19622 removing the columns with most of NAs), it could be a good start to train the model. In case that the model accuracy is not good, we can step back and try the 406 observations where almost all columns contain data.</p>
+<p>Once the data has been clean, the next is to split it into training and testing to test accuracy later.</p>
+<pre class="r"><code>set.seed(48293)
+training &lt;- remove_na_columns(get.pml.files())
+
+require('caret')
+
+# Create a set of training and testing set to measure error
+if (!exists('pmlTraining')) {
+  inTrain &lt;- createDataPartition(y=training$classe,p=0.75,list=FALSE)
+
+  pmlTest &lt;- training[-inTrain,]    
+  pmlTraining &lt;- training[inTrain,]
+  
+  # Also identified that there are columns which won't help 
+    pmlTraining &lt;- pmlTraining[,-which( names(pmlTraining) %in% 
+                                        c('user_name', 'cvtd_timestamp', 'new_window', 'X'))]
+}</code></pre>
+<p>I struggled for a long time in the model accuracy using the training because of include the row number as part of the training It was key to remove that column (named X).</p>
+</div>
+<div id="training-the-models" class="section level1">
+<h1>Training the models</h1>
+<p>The first step in training is to identify how many variables (columns) can cover the 95% of the variance in the data. Using PCA we get:</p>
+<pre><code>## 
+## Call:
+## preProcess.default(x = pmlTraining[, -which(names(pmlTraining)
+##  %in% c(&quot;classe&quot;, &quot;user_name&quot;, &quot;cvtd_timestamp&quot;, &quot;new_window&quot;))], method
+##  = &quot;pca&quot;, thresh = 0.9)
+## 
+## Created from 14718 samples and 55 variables
+## Pre-processing: principal component signal extraction, scaled, centered 
+## 
+## PCA needed 20 components to capture 90 percent of the variance</code></pre>
 </div>
 
 
