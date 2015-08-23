@@ -100,6 +100,10 @@ preProc
 
 In order to compare accuracy from different models, below are three models for classifying the data and providing the output.
 
+The three models were done with the PCA default preprocessing based on the information seen above.
+
+Also, bootstrap (default cross-validation method in caret train method) was used adjusting the number of folds to a low number due to the large amount of data in the data set. 
+
 ```{r, warning=FALSE, message=FALSE}
 # Building tree model
 if (!exists('treeModel')) {
@@ -143,5 +147,8 @@ if (exists('nbModel')) {
 
 ```
 
-From the above results, the select model is the random forest.
+From the above results, the selected model is the random forest.
+The accuracy for the tree model was 41% while for the random forst was 97% and Naibe Bayes was 66%
 There is no need to test the 406 observations without NA though it could have been a good exercise.
+
+Error accuracy can be seeing in the Sensitivity and Specificity that are really high for the random forest validating the selection.

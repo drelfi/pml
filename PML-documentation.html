@@ -138,6 +138,8 @@ if (!exists('pmlTraining')) {
 ## 
 ## PCA needed 26 components to capture 95 percent of the variance</code></pre>
 <p>In order to compare accuracy from different models, below are three models for classifying the data and providing the output.</p>
+<p>The three models were done with the PCA default preprocessing based on the information seen above.</p>
+<p>Also, bootstrap (default cross-validation method in caret train method) was used adjusting the number of folds to a low number due to the large amount of data in the data set.</p>
 <pre class="r"><code># Building tree model
 if (!exists('treeModel')) {
   treeModel &lt;- train( classe ~ ., method='rpart', preProcess='pca', data=pmlTraining)
@@ -249,7 +251,8 @@ if (!exists('nbModel')) {
 ## Detection Rate         0.2151   0.1175   0.1030  0.09971   0.1211
 ## Detection Prevalence   0.3049   0.1843   0.2002  0.15029   0.1603
 ## Balanced Accuracy      0.8154   0.7620   0.7364  0.77386   0.8057</code></pre>
-<p>From the above results, the selected model is the random forest. There is no need to test the 406 observations without NA though it could have been a good exercise.</p>
+<p>From the above results, the selected model is the random forest. The accuracy for the tree model was 41% while for the random forst was 97% and Naibe Bayes was 66% There is no need to test the 406 observations without NA though it could have been a good exercise.</p>
+<p>Error accuracy can be seeing in the Sensitivity and Specificity that are really high for the random forest validating the selection.</p>
 </div>
 
 
